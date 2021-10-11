@@ -1,0 +1,104 @@
+---
+title: "wk_nn_bankloan, day5, PA course"
+output: html_document
+---
+
+```{r setup}
+library(neuralnet)
+library(tictoc)
+
+```
+
+## Load data
+
+```{r}
+bank_data <- read.csv(file = "wk_nn_bankloan.csv", header=TRUE, sep=",")
+str(bank_data)
+```
+
+## Pre-process data
+
+```{r, message=FALSE, warning=FALSE}
+# removing address and ID as it is not related to credit scoring based on general concensus
+bank_data = subset(bank_data, select = -c(CustomerID, Address))
+
+dim(bank_data)
+
+### apply normalization on numerical data
+
+```
+
+## Data normalization
+
+```{r}
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+bank_data <- as.data.frame(lapply(bank_data, normalize))
+
+write.csv(bank_data, "bank_data_convert.csv")
+```
+
+
+## Splitting Data for Testing and Training
+```{r}
+set.seed(123)
+
+TrainingDataIndex <- sample(1:nrow(bank_data),round(0.50*nrow(bank_data)))
+
+bank_train <- bank_data[TrainingDataIndex,]
+bank_test <- bank_data[-TrainingDataIndex,]
+
+```
+
+## Train neural network
+
+```{r}
+
+# Reference: https://cran.r-project.org/web/packages/neuralnet/neuralnet.pdf
+
+param_nodes_hidden_layer <- c(10) # No. of nodes at each hidden layer
+param_max_iteration <- 1e5 # No. of iterations in training
+param_learning_rate <- 0.05 # the learning rate during back propagation
+
+# combine the attributes name for the convenience.
+names <- colnames(bank_data)
+f <- as.formula(paste("CreditScore ~", paste(names[!names %in% "CreditScore"], collapse = " + ")))
+f
+tic("Neural network training")
+
+nnmodel <- neuralnet(f, data = bank_train, hidden = param_nodes_hidden_layer, stepmax = param_max_iteration, learningrate = param_learning_rate, threshold = 0.1, linear.output = FALSE)
+
+#linear.output=FALSE means this is classification problem, as required by neuralnet package
+
+toc()
+
+plot(nnmodel)
+
+print("NN model training is finished")
+```
+
+```{r}
+traineva <- compute(nnmodel, bank_train[,1:ncol(bank_train)])$net.result
+
+traineva <- sapply(traineva, round, digits=0)
+
+traineva_result = data.frame(actual = bank_train$CreditScore, prediction = traineva)
+
+table(traineva_result)
+```
+
+
+```{r}
+mypredict <- compute(nnmodel, bank_test[,1:ncol(bank_test)])$net.result
+
+mypredict <- sapply(mypredict, round, digits=0)
+
+results = data.frame(actual = bank_test$CreditScore, prediction = mypredict)
+
+table(results)
+
+# acceptable error rate without over/underfitting showing
+```
+
