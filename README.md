@@ -9,3 +9,6 @@ Here are some in-class or after-class data analytics workshops.
 [Bankloan - MLP Neural Network - R Markdown](https://github.com/josjosephine/ds-practice/blob/main/NeuralNetwork.Rmd)
 
 [Text Analytics Mini Project - Python](https://github.com/josjosephine/ds-practice/blob/main/TextAnalytics_mini.ipynb)
+
+[Neural Collaborative Filtering Recommender System Project - Python](https://github.com/josjosephine/ds-practice/blob/main/Steam_NCF.ipynb)
+
